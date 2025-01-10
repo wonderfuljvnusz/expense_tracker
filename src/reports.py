@@ -1,37 +1,37 @@
 # Import required modules
 import pandas as pd
 import matplotlib.pyplot as plt
-from src.models import get_expenses
+from models import get_expenses
 
 def generate_report():
-    """
-    Generate a summarized report of expenses based on user selection.
-    The report can be daily, weekly, or monthly.
-    """
     # Query database for all expenses
     expenses = get_expenses()
-
-    # Convert the data to a pandas DataFrame for easier manipulation
-    df = pd.DataFrame(expenses, columns=["id", "date", "category", "amount", "description"])
-    df["date"] = pd.to_datetime(df["date"])  # Convert date column to datetime
-
-    # Prompt user for report type
-    report_type = input("Enter report type (daily, weekly, monthly): ").strip().lower()
-
-    # Summarize expenses based on the selected type
-    if report_type == "daily":
-        summary = df.groupby(df["date"].dt.date).sum()
-    elif report_type == "weekly":
-        summary = df.groupby(df["date"].dt.to_period("W")).sum()
-    elif report_type == "monthly":
-        summary = df.groupby(df["date"].dt.to_period("M")).sum()
-    else:
-        print("Invalid report type. Please choose daily, weekly, or monthly.")
+    if not expenses:
+        print("No expenses found.")
         return
 
-    # Display the report in tabular format
-    print("\nExpense Summary:")
-    print(summary[["amount"]])
+    # Convert data into a DataFrame
+    df = pd.DataFrame(expenses, columns=["id", "date", "category", "amount", "description"])
+
+    # Convert "date" column to datetime format
+    df["date"] = pd.to_datetime(df["date"])
+
+    # Prompt user for report type
+    report_type = input("Enter report type (daily, weekly, monthly): ").lower()
+
+    # Group data based on report type
+    if report_type == "daily":
+        summary = df.groupby(df["date"].dt.date)["amount"].sum()
+    elif report_type == "weekly":
+        summary = df.groupby(df["date"].dt.isocalendar().week)["amount"].sum()
+    elif report_type == "monthly":
+        summary = df.groupby(df["date"].dt.month)["amount"].sum()
+    else:
+        print("Invalid report type.")
+        return
+
+    # Display the summary
+    print(summary)
 
 def visualize_expenses():
     """
